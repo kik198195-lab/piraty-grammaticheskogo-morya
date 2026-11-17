@@ -151,12 +151,25 @@ input,textarea,select{user-select:text;-webkit-user-select:text;touch-action:aut
 
 .pool{position:absolute;display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-content:center;padding:14px}
 .bins{position:absolute;display:flex;gap:24px;justify-content:center;align-items:flex-end}
-.bin{position:relative;flex:1;max-width:420px;border-radius:26px;display:flex;flex-direction:column;align-items:center;transition:transform .15s,box-shadow .2s}
+.bin{position:relative;flex:1 1 0;min-width:0;max-width:420px;border-radius:26px;display:flex;flex-direction:column;align-items:center;transition:transform .15s,box-shadow .2s}
 .bin.hover{transform:scale(1.04)}
 .bin .bl{font:900 28px "Segoe UI";color:#fff;padding:8px 20px;border-radius:16px;text-shadow:0 2px 0 rgba(0,0,0,.3);box-shadow:0 5px 0 rgba(0,0,0,.22);text-align:center;line-height:1.1}
 .bin .bl small{display:block;font-size:19px;font-weight:700;opacity:.95}
+.bin .bl{max-width:100%;white-space:nowrap;box-sizing:border-box}.bin .bl small{white-space:normal;font-size:.68em}
 .bin .slot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-content:flex-start;padding:10px;min-height:80px;width:100%}
 .bin .slot .card{height:52px;min-width:0;font-size:22px;padding:0 14px;border-radius:14px;box-shadow:0 4px 0 #c49456}
+.bin .slot .card{max-width:100%;white-space:normal;text-align:center;line-height:1.1;overflow:hidden}
+.bin.brk .slot .card{overflow-wrap:anywhere;hyphens:auto}
+.bin .slot .card:not(.pic){height:auto;min-height:52px;padding:6px 14px}
+.bin.d1 .slot{gap:6px;padding:8px}.bin.d1 .slot .card:not(.pic){min-height:44px;font-size:19px;padding:4px 10px}.bin.d1 .art{height:120px}.bin.d1 .art img{height:112px}.bin.d1 .art svg{height:120px}
+.bin.d1 .slot .card.pic{width:84px;height:88px;font-size:14px}.bin.d1 .slot .card.pic .im img{max-width:60px;max-height:46px}
+.bin.d2 .slot .card:not(.pic){min-height:38px;font-size:17px;padding:3px 8px;border-radius:10px}.bin.d2 .art{height:80px}.bin.d2 .art img{height:76px}.bin.d2 .art svg{height:80px}.bin.d2 .bl{font-size:22px;padding:5px 14px}.bin.d2 .bl small{font-size:15px}
+.bin.d2 .slot .card.pic{width:72px;height:76px;font-size:13px}.bin.d2 .slot .card.pic .im{height:40px}.bin.d2 .slot .card.pic .im img{max-width:52px;max-height:40px}
+.bin.d3 .art{display:none}.bin.d3 .slot{gap:4px;padding:6px}.bin.d3 .slot .card:not(.pic){min-height:32px;font-size:15px;padding:2px 7px}
+.pool .card{max-width:100%}
+.pool.d1{gap:12px}.pool.d1 .card:not(.pic){font-size:25px;height:auto;min-height:60px;padding:6px 18px}
+.pool.d2{gap:8px;padding:6px}.pool.d2 .card:not(.pic){font-size:21px;min-height:50px;padding:4px 14px}.pool.d2 .card.pic{transform:scale(.85);margin:-8px}
+.pool.d3 .card:not(.pic){font-size:18px;min-height:42px;padding:3px 10px}.pool.d3 .card.pic{transform:scale(.72);margin:-16px}
 .bin .slot .card.coin,.bin .slot .card.barrel,.bin .slot .card.sail{width:auto;height:52px;border-radius:14px;font-size:22px;filter:none;background:linear-gradient(#fffdf6,#f6e5c0);color:#3a2410;text-shadow:none;box-shadow:0 4px 0 #c49456}
 .bin .slot .card.pic{width:96px;height:100px;font-size:16px}
 .bin .slot .card.pic .im{font-size:42px;height:56px}
@@ -1257,7 +1270,7 @@ function footBtns(ctx,{onCheck,onAccept}){
 ENGINES.sort = (area,d,ctx)=>{
   const nb=d.bins.length;
   const pool=h('div',{class:'pool',style:{left:'30px',right:'30px',top:'4px',height:d.queue?'250px':'270px'}});
-  const bins=h('div',{class:'bins',style:{left:'30px',right:'30px',bottom:'16px',top:'290px'}});
+  const bins=h('div',{class:'bins',style:{left:'30px',right:(ctx.mode!=='learn'&&nb>=3)?'260px':'30px',bottom:'16px',top:'290px'}});
   area.append(pool,bins);
   const binEls={};
   d.bins.forEach(b=>{
@@ -1285,12 +1298,24 @@ ENGINES.sort = (area,d,ctx)=>{
   function place(cardEl,binEl){
     const it=d.items[+cardEl.dataset.i];const bid=binOf(binEl);cardEl.classList.remove('sel','bad','ok');
     if(ctx.mode==='learn'){
-      if(String(it.bin)===String(bid)||(it.alt&&it.alt.includes(bid))){it.placed=bid;cardEl.classList.add('ok','locked');$('.slot',binEl).append(cardEl);binEl.classList.add('pop');setTimeout(()=>binEl.classList.remove('pop'),300);ctx.ok(cardEl,it.err===0);refill();checkDone()}
+      if(String(it.bin)===String(bid)||(it.alt&&it.alt.includes(bid))){it.placed=bid;cardEl.classList.add('ok','locked');$('.slot',binEl).append(cardEl);binEl.classList.add('pop');setTimeout(()=>binEl.classList.remove('pop'),300);ctx.ok(cardEl,it.err===0);refill();fitAll();checkDone()}
       else{it.err++;ctx.errors++;cardEl.classList.add('bad');ctx.bad(it.hint||d.hint&&d.hint(it,bid));setTimeout(()=>cardEl.classList.remove('bad'),600)}
-    }else{it.placed=bid;$('.slot',binEl).append(cardEl);SFX.click();refill();updFoot()}
+    }else{it.placed=bid;$('.slot',binEl).append(cardEl);SFX.click();refill();fitAll();updFoot()}
   }
-  function back(it){it.placed=null;it.el.classList.remove('ok','bad');pool.append(it.el)}
+  function back(it){it.placed=null;it.el.classList.remove('ok','bad');pool.append(it.el);fitAll()}
   function checkDone(){if(d.items.every(it=>it.placed))ctx.finish()}
+  // слова не должны выходить за сундук/поле: при нехватке места карточки постепенно уменьшаются
+  function fitBox(box,over){box.classList.remove('d1','d2','d3');for(const c of ['d1','d2','d3']){if(!over())break;box.classList.add(c)}}
+  function fitLabels(){const ls=Object.values(binEls).map(b=>[b,$('.bl',b)]).filter(([b,l])=>l&&b.clientWidth);
+    ls.forEach(([b,l])=>{if(l.dataset.fs===undefined)l.dataset.fs=l.style.fontSize||'';l.style.fontSize=l.dataset.fs});
+    let f=Math.min(...ls.map(([b,l])=>parseFloat(getComputedStyle(l).fontSize)));
+    const over=()=>ls.some(([b,l])=>l.scrollWidth>b.clientWidth+1);
+    ls.forEach(([b,l])=>l.style.fontSize=f+'px');while(over()&&f>13){f-=1;ls.forEach(([b,l])=>l.style.fontSize=f+'px')}}
+  const cardOver=b=>$$('.slot .card',b).some(c=>c.scrollWidth>c.clientWidth+1||c.scrollHeight>c.clientHeight+2);
+  function fitAll(){fitLabels();const H=bins.clientHeight;
+    Object.values(binEls).forEach(b=>{b.classList.remove('brk');fitBox(b,()=>b.offsetHeight>H+2||cardOver(b));if(cardOver(b))b.classList.add('brk')});
+    fitBox(pool,()=>pool.scrollHeight>pool.clientHeight+2||pool.scrollWidth>pool.clientWidth+2)}
+  fitAll();requestAnimationFrame(fitAll);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitAll);
   function updFoot(){}
   footBtns(ctx,{onCheck:()=>{
     let wrong=0,empty=0;d.items.forEach(it=>{it.el.classList.remove('ok','bad');if(!it.placed){empty++;return}if(String(it.bin)===String(it.placed)||(it.alt&&it.alt.includes(it.placed))){it.el.classList.add('ok')}else{it.el.classList.add('bad');wrong++;it.err++}});
